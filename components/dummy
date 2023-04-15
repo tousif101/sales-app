@@ -1,0 +1,99 @@
+import React, { useState } from 'react';
+
+const FileUploadForm = ({ onFileUpload }) => {
+  const [file, setFile] = useState(null);
+  const [productInfo, setProductInfo] = useState({
+    name: '',
+    category: '',
+    features: ['', '', ''],
+    benefits: ['', '', ''],
+    price: '',
+    discounts: ['', ''],
+    target_audience: '',
+    competitors: ['', ''],
+    faqs: ['', '', ''],
+  });
+
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setProductInfo((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
+  };
+
+  const handleArrayInputChange = (e, field, index) => {
+    const { value } = e.target;
+    setProductInfo((prevState) => ({
+      ...prevState,
+      [field]: prevState[field].map((item, idx) =>
+        idx === index ? value : item
+      ),
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!file) {
+      alert('Please select a file to upload');
+      return;
+    }
+    onFileUpload(file, productInfo);
+  };
+
+  const renderArrayInput = (field, label, itemCount) => (
+    <div className="mb-4">
+      <label htmlFor={field} className="block text-sm font-medium text-gray-700">
+        {label}
+      </label>
+      {Array.from({ length: itemCount }, (_, index) => (
+        <input
+          key={index}
+          type="text"
+          name={field}
+          id={field}
+          value={productInfo[field][index]}
+          onChange={(e) => handleArrayInputChange(e, field, index)}
+          className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md mb-1"
+          placeholder={`${label} ${index + 1}`}
+        />
+      ))}
+    </div>
+  );
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <input
+        type="file"
+        name="file"
+        id="file"
+        onChange={handleFileChange}
+        className="mb-4"
+      />
+
+      <div className="mb-4">
+        {/* Render other input fields similarly */}
+      </div>
+
+      {/* Render array input fields */}
+      {renderArrayInput('features', 'Features', 3)}
+      {renderArrayInput('benefits', 'Benefits', 3)}
+      {renderArrayInput('discounts', 'Discounts', 2)}
+      {renderArrayInput('competitors', 'Competitors', 2)}
+      {renderArrayInput('faqs', 'FAQs', 3)}
+
+      <button
+        type="submit"
+        className="w-full py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+      >
+        Upload
+      </button>
+    </form>
+  );
+};
+
+export default FileUploadForm;
