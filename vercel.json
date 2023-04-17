@@ -1,6 +1,6 @@
 {
     "functions": {
-      "api/**/*.{js,ts}": {
+      "api/process_video.js": {
         "maxDuration": 50
       }
     }
