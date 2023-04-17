@@ -26,7 +26,7 @@ handler.use(async (req, res, next) => {
   }
 
   const form = new Formidable.IncomingForm({
-    uploadDir: './public/files',
+    uploadDir: '/tmp/',
     keepExtensions: true,
     maxFileSize: 25 * 1024 * 1024, // 25MB
   });
