@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import FileUploadForm from '../components/FileUploadForm';
 import LoadingScreen from '../components/LoadingScreen.js';
-import JsonDataDisplay from '@/components/JsonDataDisplay';
+import DisplayData from '@/components/DisplayData';
 
 const IndexPage = () => {
   const [loading, setLoading] = useState(false);
@@ -16,7 +16,7 @@ const IndexPage = () => {
   
     try {
       // Replace '/your-flask-api-endpoint' with the actual endpoint of your Flask API
-      const response = await fetch('http://127.0.0.1:8000/process_video', {
+      const response = await fetch('/api/process_video', {
         method: 'POST',
         body: formData,
       });
@@ -45,8 +45,11 @@ const IndexPage = () => {
             <h1 className="text-4xl font-bold mb-6 text-center">Upload Sales Call</h1>
             <FileUploadForm onFileUpload={handleFileUpload} />
             {jsonData && (
-             <div className="mt-6">
-              <JsonDataDisplay data={jsonData} />
+            //  <div className="mt-6">
+            //   <JsonDataDisplay data={jsonData} />
+            // </div>
+            <div className="mt-6">
+              <DisplayData data={jsonData} />
             </div>
             )}
           </>
