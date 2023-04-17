@@ -20,6 +20,7 @@ export const config = {
 const handler = nextConnect();
 handler.use(cors());
 
+
 handler.use(async (req, res, next) => {
   if (req.method !== 'POST') {
     return next();
