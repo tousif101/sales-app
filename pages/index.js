@@ -1,62 +1,31 @@
 // pages/index.js
-import { useState } from 'react';
-import FileUploadForm from '../components/FileUploadForm';
-import LoadingScreen from '../components/LoadingScreen.js';
-import DisplayData from '@/components/DisplayData';
+import React from 'react'
+import { supabase } from '@/lib/supabase'
+import { useState, useEffect } from 'react'
+import Auth from '@/components/Auth'
 
-const IndexPage = () => {
-  const [loading, setLoading] = useState(false);
-  const [jsonData, setJsonData] = useState(null);
+function index() {
+  const [session, setSession] = useState(null)
 
-  const handleFileUpload = async (file) => {
-    setLoading(true);
-  
-    const formData = new FormData();
-    formData.append('video', file);
-  
-    try {
-      // Replace '/your-flask-api-endpoint' with the actual endpoint of your Flask API
-      const response = await fetch('/api/process_video', {
-        method: 'POST',
-        body: formData,
-      });
-  
-      if (!response.ok) {
-        throw new Error('Failed to upload file');
-      }
-  
-      const data = await response.json();
-      setJsonData(data);
-      console.log(data);
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+    })
+
+    supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+    })
+  }, [])
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="container mx-auto px-4 py-10">
-        {loading ? (
-          <LoadingScreen />
-        ) : (
-          <>
-            <h1 className="text-4xl font-bold mb-6 text-center">Upload Sales Call</h1>
-            <FileUploadForm onFileUpload={handleFileUpload} />
-            {jsonData && (
-            //  <div className="mt-6">
-            //   <JsonDataDisplay data={jsonData} />
-            // </div>
-            <div className="mt-6">
-              <DisplayData data={jsonData} />
-            </div>
-            )}
-          </>
-        )}
-      </div>
+    <div className="container" style={{ padding: '50px 0 100px 0' }}>
+      {session ? (
+        <p>User ID: {session.user.id}</p>
+      ) : (
+        <Auth />
+      )}
     </div>
-  );
-};
+  )
+}
 
-export default IndexPage;
+export default index

@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+const forms = require('@tailwindcss/forms');
+
 module.exports = {
   content: [
     './pages/**/*.{js,ts,jsx,tsx}',
@@ -14,5 +16,5 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: [forms],
 }
