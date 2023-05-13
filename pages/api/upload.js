@@ -3,8 +3,6 @@ import nc from 'next-connect';
 import { supabase } from '@/lib/supabase';
 import { checkJwt } from './middleware/checkJwt';
 import multer from 'multer';
-import { Worker } from 'node:worker_threads';
-//import transcriptionWorker from '../background/transcription-worker.js';
 
 
 const upload = multer({
@@ -24,87 +22,56 @@ const handler = nc()
     .post(upload.single('file'), async (req, res) => {
         const { user } = req;
         const file = req.file;  // Assuming the file input name is "file"
+        const path = `user-${user.user.id}/${file.originalname}`;
 
-        //Upload the file to Supabase Storage
-        const { publicURL, error: uploadError } = await supabase.storage
+        const { data, uploadError } = await supabase
+            .storage
             .from('uploads')
-            .upload(`user-${user.user.id}/${file.originalname}`, file.data);
+            .upload(path, file.buffer, {
+                upsert: false
+            });
 
         if (uploadError) {
             return res.status(400).json({ error: uploadError.message });
         }
 
-        const { data, error } = await supabase
+        console.log("DATA: ", data)
+        const { data: insert, error } = await supabase
             .from('transcripts')
             .insert([{ user_id: user.user.id, status:"processing", title: file.originalname }])
-            .select();
+            .select('*')
 
         if (error) {
             throw new Error(error.message);
         }
+        console.log("inserted DATA ", insert);
 
-        // Dynamically import the worker file
-        //const { default: transcriptionWorker } = await import('../background/transcription-worker.js');
-
-
-            // Spawn the worker thread for transcribing the video
-        // const worker = new Worker(new URL('../background/transcription-worker.js', import.meta.url), {
-        //     workerData: {
-        //         publicURL,
-        //         transcriptId: data[0].id,
-        //         userId: user.user.id,
-        //     },
-        // });
-        //
-        // worker.on('exit', (code) => {
-        //     worker.terminate();
-        // });
-        res.status(200).json({ taskId: data[0].id});
-    });
-
-export default handler;
-
-
-
-
-
-/*
-TODO: Implement this later
-const handler = nc()
-    .use(checkJwt)
-    .post(upload.single('file'), async (req, res) => {
-        const { user } = req;
-        const file = req.file;
-
+        // Call the Python API
+        const pythonApiUrl = '';
+        const pythonApiData = {
+            userId: user.user.id,
+            transcriptId: insert[0].id,
+            fileSource: path
+        };
+        console.log("Calling Python API:", pythonApiUrl, pythonApiData);
         try {
-            // Upload the file to Supabase Storage
-            const { publicURL, error: uploadError } = await supabase.storage
-                .from('uploads')
-                .upload(`user-${user.user.id}/${file.originalname}`, file.data);
+            const pythonApiResponse = await fetch(pythonApiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(pythonApiData)
+            });
 
-            if (uploadError) {
-                throw new Error(uploadError.message);
-            } else {
-                // Insert a new row into the 'transcripts' table
-                const { data, error } = await supabase
-                    .from('transcripts')
-                    .insert([{ user_id: user.user.id, status: "processing", title: file.originalname }])
-                    .select();
-
-                if (error) {
-                    // Delete the file from Supabase Storage if the row insertion fails
-                    await supabase.storage.from('uploads').remove([`user-${user.user.id}/${file.originalname}`]);
-                    throw new Error(error.message);
-                } else {
-                    console.log(data);
-                    res.status(200).json({ taskId: data[0].id });
-                }
+            if (!pythonApiResponse.ok) {
+                throw new Error('Error calling Python API');
             }
         } catch (error) {
-            res.status(400).json({ error: error.message });
+            console.error(error);
+            return res.status(500).json({ error: 'Error processing transcript' });
         }
+
+        res.status(200).json({ taskId: insert[0].id});
     });
 
 export default handler;
-
- */
