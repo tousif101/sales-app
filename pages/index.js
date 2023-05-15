@@ -4,8 +4,10 @@ import Head from 'next/head';
 import Link from 'next/link';
 
 export default function index() {
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const [session, setSession] = useState(null);
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
