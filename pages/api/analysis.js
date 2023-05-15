@@ -1,7 +1,7 @@
 import nc from 'next-connect';
 import { checkJwt } from './middleware/checkJwt';
 import {supabase} from "@/lib/supabase.js";
-import { getChatGPTResponse } from '@/lib/chatgpt';
+import { getChatGPTResponse } from '@/lib/chatGPT.js';
 
 const handler = nc()
     .use(checkJwt)
