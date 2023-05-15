@@ -3,7 +3,12 @@ import nc from 'next-connect';
 import { supabase } from '@/lib/supabase';
 import { checkJwt } from './middleware/checkJwt';
 import multer from 'multer';
+import celery from 'celery-node'
 
+const celeryClient = celery.createClient(
+    process.env.REDIS_BROKER,
+    process.env.REDIS_BROKER
+);
 
 const upload = multer({
     limits: {
@@ -46,28 +51,19 @@ const handler = nc()
         }
         console.log("inserted DATA ", insert);
 
-        // Call the Python API
-        const pythonApiUrl = '';
-        const pythonApiData = {
+        const taskData = {
             userId: user.user.id,
             transcriptId: insert[0].id,
             fileSource: path
         };
-        console.log("Calling Python API:", pythonApiUrl, pythonApiData);
+        console.log("Enqueueing Celery task:", taskData);
         try {
-            const pythonApiResponse = await fetch(pythonApiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(pythonApiData)
-            });
+            const task = celeryClient.createTask('main.process_video_and_save_transcript');
+            const taskResult = await task.applyAsync([taskData.userId, taskData.transcriptId, taskData.fileSource]);
+            console.log("Task enqueued. Result:", taskResult);
 
-            if (!pythonApiResponse.ok) {
-                throw new Error('Error calling Python API');
-            }
         } catch (error) {
-            console.error(error);
+            console.error("Error enqueuing task:", error);
             return res.status(500).json({ error: 'Error processing transcript' });
         }
 

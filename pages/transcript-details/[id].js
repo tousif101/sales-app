@@ -2,11 +2,13 @@
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import { useAuthSession } from '@/hooks/useAuthSession';
+import AnalysisDisplay from "@/components/AnalysisDisplay.js";
 
 const TranscriptPage = () => {
     const router = useRouter();
     const { id } = router.query;
     const [transcript, setTranscript] = useState(null);
+    const [analysis, setAnalysis] = useState(null);
     const session = useAuthSession();
 
     useEffect(() => {
@@ -22,6 +24,11 @@ const TranscriptPage = () => {
                     try {
                         const data = await response.json();
                         setTranscript(data);
+
+                        // Check if the transcript is still processing
+                        if (data.status === 'processing') {
+                            setTimeout(fetchTranscript, 5000);
+                        }
                     } catch (error) {
                         console.error(error);
                     }
@@ -29,15 +36,20 @@ const TranscriptPage = () => {
             }
         }
 
+        // Check if transcript is already completed on page load
+        if (transcript && transcript.status === 'completed') {
+            return;
+        }
+
         fetchTranscript();
-    }, [id, session]);
+    }, [id, session, transcript]);
 
-    useEffect(() => {
-        let intervalId = null;
-
-        const checkStatus = async () => {
-            const response = await fetch(`/api/transcript/${id}/status`, {
+    async function fetchAnalysis() {
+        if (transcript && transcript.status === 'completed') {
+            const response = await fetch(`/api/analysis?transcriptId=${id}`, {
+                method: 'GET',
                 headers: {
+                    'Content-Type': 'application/json',
                     'Authorization': `Bearer ${session.access_token}`,
                 },
             });
@@ -45,23 +57,15 @@ const TranscriptPage = () => {
             if (response.ok) {
                 try {
                     const data = await response.json();
-
-                    if (data.status === 'completed') {
-                        setTranscript(data);
-                        clearInterval(intervalId);
-                    }
+                    setAnalysis(data);
                 } catch (error) {
-                    console.error(error);
+                    console.error('Error parsing analysis data:', error);
                 }
+            } else {
+                console.error('Error fetching analysis data:', response.statusText);
             }
-        };
-
-        if (transcript && transcript.status === 'processing') {
-            intervalId = setInterval(checkStatus, 5000);
         }
-
-        return () => clearInterval(intervalId);
-    }, [transcript, id, session]);
+    }
 
     return (
         <div className="min-h-screen bg-gray-100">
@@ -74,20 +78,26 @@ const TranscriptPage = () => {
                 ) : (
                     <p className="text-center mt-4">{transcript && transcript.status === 'processing' ? 'Still Processing...' : 'Loading...'}</p>
                 )}
+
+                {transcript && transcript.status === 'completed' && (
+                    <>
+                        <button
+                            className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mx-auto block"
+                            onClick={fetchAnalysis}
+                        >
+                            Show Analysis
+                        </button>
+
+                        {analysis ? (
+                            <AnalysisDisplay analysis={analysis} />
+                        ) : (
+                            <p className="text-center mt-4"></p>
+                        )}
+                    </>
+                )}
+
             </div>
         </div>
-        // <div className="min-h-screen bg-gray-100">
-        //     <div className="container mx-auto px-4 py-10">
-        //         {transcript && transcript.status === 'completed' ? (
-        //             <div className="h-1/2  mx-auto p-4 bg-white shadow-md rounded-lg overflow-y-auto max-h-screen">
-        //                 <h2 className="text-2xl font-bold mb-4">{transcript.title}</h2>
-        //                 <pre className="whitespace-pre-wrap">{transcript.content}</pre>
-        //             </div>
-        //         ) : (
-        //             <p className="text-center mt-4">{transcript && transcript.status === 'processing' ? 'Still Processing...' : 'Loading...'}</p>
-        //         )}
-        //     </div>
-        // </div>
     );
 };
 
