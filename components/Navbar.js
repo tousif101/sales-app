@@ -34,15 +34,6 @@ export default function Navbar() {
               Transcripts
             </span>
           </Link>
-          <Link href="/analysis" passHref>
-            <span
-              className={`text-white ml-6 cursor-pointer ${
-                isActive("/analysis") && "underline"
-              }`}
-            >
-              Analysis
-            </span>
-          </Link>
           <Link href="/upload" passHref>
             <span
               className={`text-white ml-6 cursor-pointer ${
