@@ -11,14 +11,14 @@ export default function Login() {
     event.preventDefault();
 
     setLoading(true);
-    const { error } = await supabase.auth.signInWithOtp({ email });
+    const { error } = await supabase.auth.signInWithOAuth({ provider: 'zoom' });
 
     if (error) {
       setModalIsOpen(true);
       setErrorMessage(error.error_description || error.message);
     } else {
       setModalIsOpen(true);
-      setErrorMessage('Check your email for the login link!');
+      setErrorMessage('Redirecting to Zoom for authentication...');
     }
     setLoading(false);
   };
@@ -33,16 +33,6 @@ export default function Login() {
           <h1 className="text-2xl font-semibold mb-4 text-center">Welcome to Smarter Sales</h1>
           <p className="text-center mb-4">Sign in via magic link with your email below</p>
           <form onSubmit={handleLogin}>
-            <div className="mb-4">
-              <input
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
-                  type="email"
-                  placeholder="Your email"
-                  value={email}
-                  required={true}
-                  onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
             <div>
               <button
                   className={`w-full px-4 py-2 bg-blue-500 text-white font-semibold rounded-md ${
@@ -50,7 +40,7 @@ export default function Login() {
                   }`}
                   disabled={loading}
               >
-                {loading ? <span>Loading</span> : <span>Send magic link</span>}
+                {loading ? <span>Loading</span> : <span>Sign in with Zoom</span>}
               </button>
             </div>
           </form>
@@ -99,59 +89,3 @@ export default function Login() {
       </div>
   );
 }
-
-
-
-
-// import { supabase } from '@/lib/supabase'
-// import { useState } from 'react'
-//
-// export default function Login() {
-//   const [loading, setLoading] = useState(false)
-//   const [email, setEmail] = useState('')
-//
-//   const handleLogin = async (event) => {
-//     event.preventDefault()
-//
-//     setLoading(true)
-//     const { error } = await supabase.auth.signInWithOtp({ email })
-//
-//     if (error) {
-//       alert(error.error_description || error.message)
-//     } else {
-//       alert('Check your email for the login link!')
-//     }
-//     setLoading(false)
-//   }
-//
-//   return (
-//     <div className="flex justify-center pt-16">
-//       <div className="w-full max-w-md">
-//         <h1 className="text-2xl font-semibold mb-4 text-center">Welcome to Smarter Sales </h1>
-//         <p className="text-center mb-4">Sign in via magic link with your email below</p>
-//         <form onSubmit={handleLogin}>
-//           <div className="mb-4">
-//             <input
-//               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
-//               type="email"
-//               placeholder="Your email"
-//               value={email}
-//               required={true}
-//               onChange={(e) => setEmail(e.target.value)}
-//             />
-//           </div>
-//           <div>
-//             <button
-//               className={`w-full px-4 py-2 bg-blue-500 text-white font-semibold rounded-md ${
-//                 loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'
-//               }`}
-//               disabled={loading}
-//             >
-//               {loading ? <span>Loading</span> : <span>Send magic link</span>}
-//             </button>
-//           </div>
-//         </form>
-//       </div>
-//     </div>
-//   );
-// }
